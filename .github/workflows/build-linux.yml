@@ -1,0 +1,50 @@
+﻿
+name: Build DBM for Linux
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            pkg-config \
+            libx11-dev \
+            libxkbcommon-dev \
+            libwayland-dev \
+            libgl1-mesa-dev \
+            libxrandr-dev \
+            libxi-dev \
+            libxcursor-dev \
+            libxinerama-dev
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build DBM
+        run: cargo build --release --bin dbm-gui
+
+      - name: Package Linux binary
+        run: |
+          tar -czf dbm-linux-x86_64.tar.gz \
+            -C target/release dbm-gui
+
+      - name: Upload Linux binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: dbm-linux-x86_64
+          path: dbm-linux-x86_64.tar.gz
+          retention-days: 7
